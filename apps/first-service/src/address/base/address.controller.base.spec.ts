@@ -184,7 +184,7 @@ describe("Address", () => {
   });
 
   test("POST /addresses existing resource", async () => {
-    let agent = request(app.getHttpServer());
+    const agent = request(app.getHttpServer());
     await agent
       .post("/addresses")
       .send(CREATE_INPUT)
