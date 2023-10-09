@@ -22,6 +22,7 @@ import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateReq
 import { CreateOrderArgs } from "./CreateOrderArgs";
 import { UpdateOrderArgs } from "./UpdateOrderArgs";
 import { DeleteOrderArgs } from "./DeleteOrderArgs";
+import { OrderCountArgs } from "./OrderCountArgs";
 import { OrderFindManyArgs } from "./OrderFindManyArgs";
 import { OrderFindUniqueArgs } from "./OrderFindUniqueArgs";
 import { Order } from "./Order";
@@ -43,15 +44,11 @@ export class OrderResolverBase {
     possession: "any",
   })
   async _ordersMeta(
-    @graphql.Args() args: OrderFindManyArgs
+    @graphql.Args() args: OrderCountArgs
   ): Promise<MetaQueryPayload> {
-    const results = await this.service.count({
-      ...args,
-      skip: undefined,
-      take: undefined,
-    });
+    const result = await this.service.count(args);
     return {
-      count: results,
+      count: result,
     };
   }
 
@@ -172,13 +169,18 @@ export class OrderResolverBase {
   }
 
   @common.UseInterceptors(AclFilterResponseInterceptor)
-  @graphql.ResolveField(() => Customer, { nullable: true })
+  @graphql.ResolveField(() => Customer, {
+    nullable: true,
+    name: "customer",
+  })
   @nestAccessControl.UseRoles({
     resource: "Customer",
     action: "read",
     possession: "any",
   })
-  async customer(@graphql.Parent() parent: Order): Promise<Customer | null> {
+  async resolveFieldCustomer(
+    @graphql.Parent() parent: Order
+  ): Promise<Customer | null> {
     const result = await this.service.getCustomer(parent.id);
 
     if (!result) {
@@ -188,13 +190,18 @@ export class OrderResolverBase {
   }
 
   @common.UseInterceptors(AclFilterResponseInterceptor)
-  @graphql.ResolveField(() => Product, { nullable: true })
+  @graphql.ResolveField(() => Product, {
+    nullable: true,
+    name: "product",
+  })
   @nestAccessControl.UseRoles({
     resource: "Product",
     action: "read",
     possession: "any",
   })
-  async product(@graphql.Parent() parent: Order): Promise<Product | null> {
+  async resolveFieldProduct(
+    @graphql.Parent() parent: Order
+  ): Promise<Product | null> {
     const result = await this.service.getProduct(parent.id);
 
     if (!result) {
